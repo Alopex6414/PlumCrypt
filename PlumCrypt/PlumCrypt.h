@@ -6,8 +6,9 @@
 * @file		PlumCrypt.h
 * @brief	This Program is PlumCrypt DLL Project.
 * @author	Alopex/Helium
-* @version	v1.00a
-* @date		2017-12-13	v1.00a	alopex	Create Project
+* @version	v1.01a
+* @date		2017-12-13	v1.00a	alopex	Create Project.
+* @date		2017-12-17	v1.01a	alopex	Add Function EnCrypt/DeCrypt In Memory.
 */
 #pragma once
 
@@ -32,12 +33,17 @@
 
 #define CRYPTARRAYSIZE	1024
 
+//Macro Point
+#define SAFE_DELETE(Pointer)	{if(Pointer){delete(Pointer);(Pointer) = NULL;}}
+#define SAFE_DELETE_ARRAY(Pointer) {if(Pointer){delete[](Pointer);(Pointer) = NULL;}}
+
 //Struct Definition
 typedef struct
 {
 	char cFileName[24];
 	char cCodeAuthor[8];
 	DWORD dwFileSize;
+	DWORD dwCryptFileSize;
 	DWORD dwLuckyNum[4];
 } PlumFileInfo;
 
@@ -45,17 +51,26 @@ typedef struct
 class PLUMCRYPT_API CPlumCrypt
 {
 private:
-
+	char* m_pArray;			//内存资源数组地址
+	DWORD m_dwArrSize;		//内存资源数组长度
 
 public:
 	CPlumCrypt();
 	virtual ~CPlumCrypt();
 
-	//AES Crypt
-	virtual void PlumEnCryptFileA(const char* pSrc, char* pDest, DWORD* pLuckyArr);
-	virtual void PlumDeCryptFileA(const char* pSrc, char* pDest, DWORD* pLuckyArr);
-	virtual void PlumEnCryptFileExA(const char* pSrc, char* pDest, DWORD* pLuckyArr);
-	virtual void PlumDeCryptFileExA(const char* pSrc, char* pDest);
+	//访问
+	virtual void PlumGetArray(char** ppArr, DWORD* pArrSize) const;
+
+	//AES Crypt(AES加密)
+	//File(文件)
+	virtual void PlumEnCryptFileA(const char* pSrc, const char* pDest, DWORD* pLuckyArr);
+	virtual void PlumDeCryptFileA(const char* pSrc, const char* pDest, DWORD* pLuckyArr);
+	virtual void PlumEnCryptFileExA(const char* pSrc, const char* pDest, DWORD* pLuckyArr);
+	virtual void PlumDeCryptFileExA(const char* pSrc, const char* pDest);
+	//Memory(内存)
+	virtual void PlumEnCryptFileExtractFromMemoryExA(const char* pDest, DWORD* pLuckyArr);
+	virtual void PlumDeCryptFileStoreInMemoryExA(const char* pSrc);
+	virtual void PlumDeCryptFileInMemoryStoreInMemoryExA(const void* pArray, DWORD dwArraySize, PlumFileInfo sSrcArrayInfo);
 };
 
 #endif
