@@ -70,7 +70,8 @@ public:
 	//Memory(ÄÚ´æ)
 	virtual void PlumEnCryptFileExtractFromMemoryExA(const char* pDest, DWORD* pLuckyArr);
 	virtual void PlumDeCryptFileStoreInMemoryExA(const char* pSrc);
-	virtual void PlumDeCryptFileInMemoryStoreInMemoryExA(const void* pArray, DWORD dwArraySize, PlumFileInfo sSrcArrayInfo);
+	virtual void PlumDeCryptFileInMemoryStoreInFileExA(const void* pArray, PlumFileInfo sSrcArrayInfo, const char* pDest);
+	virtual void PlumDeCryptFileInMemoryStoreInMemoryExA(const void* pArray, PlumFileInfo sSrcArrayInfo);
 };
 
 #endif

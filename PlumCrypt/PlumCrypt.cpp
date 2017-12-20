@@ -719,6 +719,97 @@ void CPlumCrypt::PlumDeCryptFileStoreInMemoryExA(const char* pSrc)
 }
 
 //-------------------------------------------------------------------------------------------------
+// @Function:	 PlumDeCryptFileInMemoryStoreInFileExA(const char* pSrc)
+// @Purpose: PlumDeCryptStoreInMemoryExA解密内存数组存储到内存Ex(Msg)
+// @Since: v1.00a
+// @Para: const void* pSrcArr				//内存数组地址
+// @Para: DWORD dwArrSize					//内存数组长度
+// @Para: PlumFileInfo sSrcArrInfo			//文件信息结构体
+// @Para: const char* pDest					//目标文件地址
+// @Return: None
+//-------------------------------------------------------------------------------------------------
+void CPlumCrypt::PlumDeCryptFileInMemoryStoreInFileExA(const void* pArray, PlumFileInfo sSrcArrayInfo, const char* pDest)
+{
+	HANDLE hFileDest;
+
+	//打开目标文件
+	hFileDest = CreateFileA(pDest, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+
+	if (hFileDest == INVALID_HANDLE_VALUE)
+	{
+		CloseHandle(hFileDest);
+		return;
+	}
+
+	CPlumCipherA* pCode = new CPlumCipherA((unsigned char*)(sSrcArrayInfo.dwLuckyNum));
+	unsigned char* pSrcArr = NULL;
+	unsigned char* pDestArr = NULL;
+	int nSrcSize = CRYPTARRAYSIZE;
+	int nDestSize = CRYPTARRAYSIZE;
+	int nReadSize = 0;
+	DWORD dwRealRead = 0;
+	DWORD dwRealWrite = 0;
+	DWORD dwWriteAllCount = 0;
+	DWORD dwReadLastSize = 0;
+	DWORD dwWriteLastSize = 0;
+	DWORD dwWriteCount = 0;
+	DWORD dwWriteOffSet = 0;
+	DWORD dwReadCount = 0;
+	DWORD dwReadOffSet = 0;
+
+	m_dwArrSize = sSrcArrayInfo.dwFileSize;
+
+	dwWriteAllCount = sSrcArrayInfo.dwFileSize / nSrcSize + 1;
+	dwWriteLastSize = sSrcArrayInfo.dwFileSize % nSrcSize;
+	dwReadLastSize = sSrcArrayInfo.dwCryptFileSize % nSrcSize;
+
+	pSrcArr = (unsigned char*)malloc(nSrcSize*sizeof(unsigned char));
+	pDestArr = (unsigned char*)malloc(nDestSize*sizeof(unsigned char));
+
+	for (;;)
+	{
+		memset(pSrcArr, 0, nSrcSize);
+		memset(pDestArr, 0, nDestSize);
+
+		++dwReadCount;
+		if (dwReadCount < dwWriteAllCount)
+		{
+			dwRealRead = nSrcSize;
+		}
+		else if (dwReadCount == dwWriteAllCount)
+		{
+			dwRealRead = dwReadLastSize;
+		}
+		else
+		{
+			break;
+		}
+
+		memcpy(pSrcArr, ((const char*)pArray + dwReadOffSet), dwRealRead);
+		dwReadOffSet += dwRealRead;
+
+		pCode->DeCrypt((void*)pSrcArr, (void*)pDestArr, nSrcSize);
+
+		++dwWriteCount;
+		if (dwWriteCount == dwWriteAllCount)
+		{
+			dwRealRead = dwWriteLastSize;
+		}
+
+		WriteFile(hFileDest, pDestArr, dwRealRead, &dwRealWrite, NULL);
+		if (dwRealWrite == 0) break;
+		dwWriteOffSet += dwRealRead;
+	}
+
+	if (pSrcArr) free(pSrcArr);
+	if (pDestArr) free(pDestArr);
+
+	delete pCode;
+
+	CloseHandle(hFileDest);
+}
+
+//-------------------------------------------------------------------------------------------------
 // @Function:	 PlumDeCryptFileStoreInMemoryExA(const char* pSrc)
 // @Purpose: PlumDeCryptStoreInMemoryExA解密内存数组存储到内存Ex(Msg)
 // @Since: v1.00a
@@ -727,7 +818,7 @@ void CPlumCrypt::PlumDeCryptFileStoreInMemoryExA(const char* pSrc)
 // @Para: PlumFileInfo sSrcArrInfo			//文件信息结构体
 // @Return: None
 //-------------------------------------------------------------------------------------------------
-void CPlumCrypt::PlumDeCryptFileInMemoryStoreInMemoryExA(const void* pArray, DWORD dwArraySize, PlumFileInfo sSrcArrayInfo)
+void CPlumCrypt::PlumDeCryptFileInMemoryStoreInMemoryExA(const void* pArray, PlumFileInfo sSrcArrayInfo)
 {
 	CPlumCipherA* pCode = new CPlumCipherA((unsigned char*)(sSrcArrayInfo.dwLuckyNum));
 	unsigned char* pSrcArr = NULL;
@@ -737,6 +828,7 @@ void CPlumCrypt::PlumDeCryptFileInMemoryStoreInMemoryExA(const void* pArray, DWO
 	int nReadSize = 0;
 	DWORD dwRealRead = 0;
 	DWORD dwWriteAllCount = 0;
+	DWORD dwReadLastSize = 0;
 	DWORD dwWriteLastSize = 0;
 	DWORD dwWriteCount = 0;
 	DWORD dwWriteOffSet = 0;
@@ -749,6 +841,7 @@ void CPlumCrypt::PlumDeCryptFileInMemoryStoreInMemoryExA(const void* pArray, DWO
 
 	dwWriteAllCount = sSrcArrayInfo.dwFileSize / nSrcSize + 1;
 	dwWriteLastSize = sSrcArrayInfo.dwFileSize % nSrcSize;
+	dwReadLastSize = sSrcArrayInfo.dwCryptFileSize % nSrcSize;
 
 	pSrcArr = (unsigned char*)malloc(nSrcSize*sizeof(unsigned char));
 	pDestArr = (unsigned char*)malloc(nDestSize*sizeof(unsigned char));
@@ -759,9 +852,13 @@ void CPlumCrypt::PlumDeCryptFileInMemoryStoreInMemoryExA(const void* pArray, DWO
 		memset(pDestArr, 0, nDestSize);
 
 		++dwReadCount;
-		if (dwReadCount <= dwWriteAllCount)
+		if (dwReadCount < dwWriteAllCount)
 		{
 			dwRealRead = nSrcSize;
+		}
+		else if (dwReadCount == dwWriteAllCount)
+		{
+			dwRealRead = dwReadLastSize;
 		}
 		else
 		{
