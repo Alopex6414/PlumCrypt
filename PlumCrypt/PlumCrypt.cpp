@@ -281,8 +281,6 @@ void CPlumCrypt::PlumEnCryptFileExA(const char* pSrc, const char* pDest, DWORD* 
 	unsigned char* pDestArr = NULL;
 	int nSrcSize = CRYPTARRAYSIZE;
 	int nDestSize = CRYPTARRAYSIZE;
-	int nReadSize = 0;
-	int nWriteSize = 0;
 	DWORD dwRealRead = 0;
 	DWORD dwRealWrite = 0;
 	DWORD dwFileSize = 0;
@@ -412,8 +410,6 @@ void CPlumCrypt::PlumDeCryptFileExA(const char* pSrc, const char* pDest)
 	unsigned char* pDestArr = NULL;
 	int nSrcSize = CRYPTARRAYSIZE;
 	int nDestSize = CRYPTARRAYSIZE;
-	int nReadSize = 0;
-	int nWriteSize = 0;
 	DWORD dwRealRead = 0;
 	DWORD dwRealWrite = 0;
 	DWORD dwWriteAllCount = 0;
@@ -529,8 +525,6 @@ void CPlumCrypt::PlumEnCryptFileExtractFromMemoryExA(const char* pDest, DWORD* p
 	unsigned char* pDestArr = NULL;
 	int nSrcSize = CRYPTARRAYSIZE;
 	int nDestSize = CRYPTARRAYSIZE;
-	int nReadSize = 0;
-	int nWriteSize = 0;
 	DWORD dwRealRead = 0;
 	DWORD dwRealWrite = 0;
 	DWORD dwFileSize = 0;
@@ -675,7 +669,6 @@ void CPlumCrypt::PlumDeCryptFileStoreInMemoryExA(const char* pSrc)
 	unsigned char* pDestArr = NULL;
 	int nSrcSize = CRYPTARRAYSIZE;
 	int nDestSize = CRYPTARRAYSIZE;
-	int nReadSize = 0;
 	DWORD dwRealRead = 0;
 	DWORD dwWriteAllCount = 0;
 	DWORD dwWriteLastSize = 0;
@@ -746,7 +739,6 @@ void CPlumCrypt::PlumDeCryptFileInMemoryStoreInFileExA(const void* pArray, PlumF
 	unsigned char* pDestArr = NULL;
 	int nSrcSize = CRYPTARRAYSIZE;
 	int nDestSize = CRYPTARRAYSIZE;
-	int nReadSize = 0;
 	DWORD dwRealRead = 0;
 	DWORD dwRealWrite = 0;
 	DWORD dwWriteAllCount = 0;
@@ -825,7 +817,6 @@ void CPlumCrypt::PlumDeCryptFileInMemoryStoreInMemoryExA(const void* pArray, Plu
 	unsigned char* pDestArr = NULL;
 	int nSrcSize = CRYPTARRAYSIZE;
 	int nDestSize = CRYPTARRAYSIZE;
-	int nReadSize = 0;
 	DWORD dwRealRead = 0;
 	DWORD dwWriteAllCount = 0;
 	DWORD dwReadLastSize = 0;
