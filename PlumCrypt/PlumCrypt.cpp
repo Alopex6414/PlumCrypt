@@ -6,9 +6,10 @@
 * @file		PlumCrypt.cpp
 * @brief	This Program is PlumCrypt DLL Project.
 * @author	Alopex/Helium
-* @version	v1.01a
+* @version	v1.02a
 * @date		2017-12-13	v1.00a	alopex	Create Project.
 * @date		2017-12-17	v1.01a	alopex	Add Function EnCrypt/DeCrypt In Memory.
+* @date		2018-1-16	v1.02a	alopex	Add Function For CipherMaker.
 */
 #include "PlumCrypt.h"
 
@@ -442,6 +443,140 @@ void CPlumCrypt::PlumDeCryptFileExA(const char* pSrc, const char* pDest)
 		if (dwRealWrite == 0) break;
 	}
 
+	if (pMsg) free(pMsg);
+	if (pSrcArr) free(pSrcArr);
+	if (pDestArr) free(pDestArr);
+
+	delete pCode;
+
+	CloseHandle(hFileMsg);
+	CloseHandle(hFileDest);
+	CloseHandle(hFileSrc);
+}
+
+//------------------------------------------------------------------
+// @Function:	 PlumDeCryptFileExA()
+// @Purpose: PlumCryptFileA解密文件(Ex)(msg)
+// @Since: v1.00a
+// @Para: None
+// @Return: None
+//------------------------------------------------------------------
+void CPlumCrypt::PlumDeCryptFileNoExA(const char* pSrc, const char* pDest)
+{
+	HANDLE hFileSrc;
+	HANDLE hFileDest;
+	HANDLE hFileMsg;
+
+	//打开源文件
+	hFileSrc = CreateFileA(pSrc, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+
+	if (hFileSrc == INVALID_HANDLE_VALUE)
+	{
+		CloseHandle(hFileSrc);
+		return;
+	}
+
+	//分析文件
+	char* pTemp;
+	char* pMsg;
+	int nCount;
+
+	pTemp = (char*)pSrc;
+	nCount = strlen(pTemp);
+	pMsg = (char*)malloc((nCount + 1)*sizeof(char));
+	strcpy_s(pMsg, (nCount + 1), pTemp);
+	pTemp = strrchr(pMsg, '.');
+	*pTemp = '.';
+	*(pTemp + 1) = 'm';
+	*(pTemp + 2) = 's';
+	*(pTemp + 3) = 'g';
+	*(pTemp + 4) = '\0';
+
+	//打开文件信息
+	hFileMsg = CreateFileA(pMsg, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+
+	if (hFileMsg == INVALID_HANDLE_VALUE)
+	{
+		if (pMsg) free(pMsg);
+		CloseHandle(hFileMsg);
+		return;
+	}
+
+	//读入Msg
+	PlumFileInfo sMsg;
+	DWORD dwMsgRead;
+
+	ReadFile(hFileMsg, &sMsg, sizeof(sMsg), &dwMsgRead, NULL);
+	
+	char* pArr = NULL;
+	int nDestCount = 0;
+	int nMsgCount = 0;
+	int i = 0;
+
+	pTemp = (char*)pDest;
+	nDestCount = strlen(pTemp);
+	nMsgCount = strlen(sMsg.cFileName);
+	nCount = nDestCount + nMsgCount;
+	pArr = (char*)malloc((nCount + 2)*sizeof(char));
+	for (i = 0; i < nDestCount; ++i)
+	{
+		*(pArr + i) = *(pTemp + i);
+	}
+	*(pArr + i) = '\\';
+	for (int j = 0; j < nMsgCount; ++j)
+	{
+		*(pArr + i + 1 + j) = *(sMsg.cFileName + j);
+	}
+	*(pArr + nCount + 1) = '\0';
+
+	//打开目标文件
+	hFileDest = CreateFileA(pArr, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+
+	if (hFileDest == INVALID_HANDLE_VALUE)
+	{
+		if (pArr) free(pArr);
+		CloseHandle(hFileDest);
+		return;
+	}
+
+	CPlumCipherA* pCode = new CPlumCipherA((unsigned char*)(sMsg.dwLuckyNum));
+	unsigned char* pSrcArr = NULL;
+	unsigned char* pDestArr = NULL;
+	int nSrcSize = CRYPTARRAYSIZE;
+	int nDestSize = CRYPTARRAYSIZE;
+	DWORD dwRealRead = 0;
+	DWORD dwRealWrite = 0;
+	DWORD dwWriteAllCount = 0;
+	DWORD dwWriteLastSize = 0;
+	DWORD dwWriteCount = 0;
+
+	dwWriteAllCount = sMsg.dwFileSize / nSrcSize + 1;
+	dwWriteLastSize = sMsg.dwFileSize % nSrcSize;
+
+	pSrcArr = (unsigned char*)malloc(nSrcSize*sizeof(unsigned char));
+	pDestArr = (unsigned char*)malloc(nDestSize*sizeof(unsigned char));
+
+	for (;;)
+	{
+		memset(pSrcArr, 0, nSrcSize);
+		memset(pDestArr, 0, nDestSize);
+
+		ReadFile(hFileSrc, pSrcArr, nSrcSize, &dwRealRead, NULL);
+		if (dwRealRead == 0) break;
+
+		pCode->DeCrypt((void*)pSrcArr, (void*)pDestArr, nSrcSize);
+
+		++dwWriteCount;
+		if (dwWriteCount == dwWriteAllCount)
+		{
+			dwRealRead = dwWriteLastSize;
+		}
+
+		WriteFile(hFileDest, pDestArr, dwRealRead, &dwRealWrite, NULL);
+		if (dwRealWrite == 0) break;
+	}
+
+	if (pArr) free(pArr);
 	if (pMsg) free(pMsg);
 	if (pSrcArr) free(pSrcArr);
 	if (pDestArr) free(pDestArr);
