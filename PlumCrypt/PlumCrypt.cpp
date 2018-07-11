@@ -9,7 +9,7 @@
 * @version	v1.02a
 * @date		2017-12-13	v1.00a	alopex	Create Project.
 * @date		2017-12-17	v1.01a	alopex	Add Function EnCrypt/DeCrypt In Memory.
-* @date		2018-1-16	v1.02a	alopex	Add Function For CipherMaker.
+* @date		2018-07-05	v1.02a	alopex	Add Function Crypt Cat Function.
 */
 #include "PlumCrypt.h"
 
@@ -48,7 +48,7 @@ CPlumCrypt::~CPlumCrypt()
 // @Para: DWORD* pArrSize		//数组长度指针
 // @Return: None
 //------------------------------------------------------------------
-void CPlumCrypt::PlumGetArray(char** ppArr, DWORD* pArrSize) const
+void PLUMCRYPT_CALLMODE CPlumCrypt::PlumGetArray(char** ppArr, DWORD* pArrSize) const
 {
 	*ppArr = m_pArray;
 	*pArrSize = m_dwArrSize;
@@ -61,7 +61,7 @@ void CPlumCrypt::PlumGetArray(char** ppArr, DWORD* pArrSize) const
 // @Para: None
 // @Return: None
 //------------------------------------------------------------------
-void CPlumCrypt::PlumEnCryptFileA(const char* pSrc, const char* pDest, DWORD* pLuckyArr)
+void PLUMCRYPT_CALLMODE CPlumCrypt::PlumEnCryptFileA(const char* pSrc, const char* pDest, DWORD* pLuckyArr)
 {
 	FILE* fin;
 	FILE* fou;
@@ -138,7 +138,7 @@ void CPlumCrypt::PlumEnCryptFileA(const char* pSrc, const char* pDest, DWORD* pL
 // @Para: None
 // @Return: None
 //------------------------------------------------------------------
-void CPlumCrypt::PlumDeCryptFileA(const char* pSrc, const char* pDest, DWORD* pLuckyArr)
+void PLUMCRYPT_CALLMODE CPlumCrypt::PlumDeCryptFileA(const char* pSrc, const char* pDest, DWORD* pLuckyArr)
 {
 	FILE* fin;
 	FILE* fou;
@@ -208,7 +208,7 @@ void CPlumCrypt::PlumDeCryptFileA(const char* pSrc, const char* pDest, DWORD* pL
 // @Para: None
 // @Return: None
 //------------------------------------------------------------------
-void CPlumCrypt::PlumEnCryptFileExA(const char* pSrc, const char* pDest, DWORD* pLuckyArr)
+void PLUMCRYPT_CALLMODE CPlumCrypt::PlumEnCryptFileExA(const char* pSrc, const char* pDest, DWORD* pLuckyArr)
 {
 	HANDLE hFileSrc;
 	HANDLE hFileDest;
@@ -350,7 +350,7 @@ void CPlumCrypt::PlumEnCryptFileExA(const char* pSrc, const char* pDest, DWORD* 
 // @Para: None
 // @Return: None
 //------------------------------------------------------------------
-void CPlumCrypt::PlumDeCryptFileExA(const char* pSrc, const char* pDest)
+void PLUMCRYPT_CALLMODE CPlumCrypt::PlumDeCryptFileExA(const char* pSrc, const char* pDest)
 {
 	HANDLE hFileSrc;
 	HANDLE hFileDest;
@@ -461,7 +461,7 @@ void CPlumCrypt::PlumDeCryptFileExA(const char* pSrc, const char* pDest)
 // @Para: None
 // @Return: None
 //------------------------------------------------------------------
-void CPlumCrypt::PlumDeCryptFileNoExA(const char* pSrc, const char* pDest)
+void PLUMCRYPT_CALLMODE CPlumCrypt::PlumDeCryptFileNoExA(const char* pSrc, const char* pDest)
 {
 	HANDLE hFileSrc;
 	HANDLE hFileDest;
@@ -596,7 +596,7 @@ void CPlumCrypt::PlumDeCryptFileNoExA(const char* pSrc, const char* pDest)
 // @Para: DWORD* pLuckyArr			//加密密码指针
 // @Return: None
 //-------------------------------------------------------------------------------------------------
-void CPlumCrypt::PlumEnCryptFileExtractFromMemoryExA(const char* pDest, DWORD* pLuckyArr)
+void PLUMCRYPT_CALLMODE CPlumCrypt::PlumEnCryptFileExtractFromMemoryExA(const char* pDest, DWORD* pLuckyArr)
 {
 	HANDLE hFileDest;
 	HANDLE hFileMsg;
@@ -742,6 +742,163 @@ void CPlumCrypt::PlumEnCryptFileExtractFromMemoryExA(const char* pDest, DWORD* p
 	CloseHandle(hFileDest);
 }
 
+//-------------------------------------------------------------------------------------------------------------------------
+// @Function:	 PlumEnCryptFileExtractFromMemoryExA(const char * pDest, const void * pArray, int nSize, DWORD * pLuckyArr)
+// @Purpose: PlumEnCryptFileExtractFromMemoryExA加密内存数组存储到文件Ex(Msg)
+// @Since: v1.00a
+// @Para: const char* pDest			//加密文件地址
+// @Para: const void * pArray		//源数组地址
+// @Para: int nSize					//源数组长度
+// @Para: DWORD* pLuckyArr			//加密密码指针
+// @Return: None
+//-------------------------------------------------------------------------------------------------------------------------
+void PLUMCRYPT_CALLMODE CPlumCrypt::PlumEnCryptFileExtractFromMemoryExA(const char * pDest, const void * pArray, int nSize, DWORD * pLuckyArr)
+{
+	HANDLE hFileDest;
+	HANDLE hFileMsg;
+	char* pArr = (char*)pArray;
+
+	//打开目标文件
+	hFileDest = CreateFileA(pDest, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+
+	if (hFileDest == INVALID_HANDLE_VALUE)
+	{
+		CloseHandle(hFileDest);
+		return;
+	}
+
+	//分析文件
+	char* pTemp;
+	char* pMsg;
+	char* pSrcName;
+	int nCount;
+
+	pTemp = (char*)pDest;
+	nCount = strlen(pTemp);
+	pMsg = (char*)malloc((nCount + 1) * sizeof(char));
+	strcpy_s(pMsg, (nCount + 1), pTemp);
+	pTemp = strrchr(pMsg, '.');
+	*pTemp = '.';
+	*(pTemp + 1) = 'm';
+	*(pTemp + 2) = 's';
+	*(pTemp + 3) = 'g';
+	*(pTemp + 4) = '\0';
+
+	pTemp = strrchr((char*)pDest, '\\');
+	nCount = strlen(++pTemp);
+	pSrcName = (char*)malloc((nCount + 1) * sizeof(char));
+	strcpy_s(pSrcName, (nCount + 1), pTemp);
+
+	//打开文件信息
+	hFileMsg = CreateFileA(pMsg, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+
+	if (hFileMsg == INVALID_HANDLE_VALUE)
+	{
+		if (pMsg) free(pMsg);
+		if (pSrcName) free(pSrcName);
+		CloseHandle(hFileMsg);
+		return;
+	}
+
+	CPlumCipherA* pCode = NULL;
+	unsigned char KeyArr[16];
+
+	for (int i = 0; i < 4; ++i)
+	{
+		for (int j = 0; j < 4; ++j)
+		{
+			KeyArr[4 * i + j] = (*(pLuckyArr + i) >> (8 * j)) & 0xff;
+		}
+	}
+
+	pCode = new CPlumCipherA(KeyArr);
+
+	unsigned char* pSrcArr = NULL;
+	unsigned char* pDestArr = NULL;
+	int nSrcSize = CRYPTARRAYSIZE;
+	int nDestSize = CRYPTARRAYSIZE;
+	DWORD dwRealRead = 0;
+	DWORD dwRealWrite = 0;
+	DWORD dwFileSize = 0;
+	DWORD dwCryptFileSize = 0;
+	DWORD dwReadAllCount = 0;
+	DWORD dwReadLastSize = 0;
+	DWORD dwReadCount = 0;
+	DWORD dwReadOffSet = 0;
+
+	dwFileSize = nSize;//获取文件长度
+
+	dwReadAllCount = dwFileSize / nSrcSize + 1;
+	dwReadLastSize = dwFileSize % nSrcSize;
+
+	pSrcArr = (unsigned char*)malloc(nSrcSize * sizeof(unsigned char));
+	pDestArr = (unsigned char*)malloc(nDestSize * sizeof(unsigned char));
+
+	for (;;)
+	{
+		memset(pSrcArr, 0, nSrcSize);
+		memset(pDestArr, 0, nDestSize);
+
+		++dwReadCount;
+		if (dwReadCount < dwReadAllCount)
+		{
+			dwRealRead = nSrcSize;
+		}
+		else if (dwReadCount == dwReadAllCount)
+		{
+			dwRealRead = dwReadLastSize;
+		}
+		else
+		{
+			break;
+		}
+
+		memcpy(pSrcArr, (pArr + dwReadOffSet), dwRealRead);
+		dwReadOffSet += dwRealRead;
+
+		if (dwRealRead != nSrcSize)
+		{
+			while (dwRealRead % 16)
+			{
+				++dwRealRead;
+			}
+		}
+
+		pCode->EnCrypt((void*)pSrcArr, (void*)pDestArr, nSrcSize);
+		dwCryptFileSize += dwRealRead;
+
+		WriteFile(hFileDest, pDestArr, dwRealRead, &dwRealWrite, NULL);
+		if (dwRealWrite == 0) break;
+	}
+
+	//写入Msg
+	int i = 0;
+	PlumFileInfo sMsg;
+	DWORD dwMsgWrite;
+
+	memset(&sMsg, 0, sizeof(sMsg));
+	for (i = 0, pTemp = pSrcName; i < sizeof(sMsg.cFileName) && *pTemp != '\0'; ++i, ++pTemp)
+	{
+		*(sMsg.cFileName + i) = *pTemp;
+	}
+	memcpy((void*)(sMsg.cCodeAuthor), "alopex", sizeof("alopex"));
+	memcpy((void*)(sMsg.dwLuckyNum), pLuckyArr, sizeof(sMsg.dwLuckyNum));
+	sMsg.dwFileSize = dwFileSize;
+	sMsg.dwCryptFileSize = dwCryptFileSize;
+
+	WriteFile(hFileMsg, &sMsg, sizeof(sMsg), &dwMsgWrite, NULL);
+
+	if (pMsg) free(pMsg);
+	if (pSrcName) free(pSrcName);
+	if (pSrcArr) free(pSrcArr);
+	if (pDestArr) free(pDestArr);
+
+	delete pCode;
+
+	CloseHandle(hFileMsg);
+	CloseHandle(hFileDest);
+}
+
 //-------------------------------------------------------------------------------------------------
 // @Function:	 PlumDeCryptFileStoreInMemoryExA(const char* pSrc)
 // @Purpose: PlumDeCryptStoreInMemoryExA解密文件存储到内存Ex(Msg)
@@ -749,7 +906,7 @@ void CPlumCrypt::PlumEnCryptFileExtractFromMemoryExA(const char* pDest, DWORD* p
 // @Para: const char* pSrc			//解密文件地址
 // @Return: None
 //-------------------------------------------------------------------------------------------------
-void CPlumCrypt::PlumDeCryptFileStoreInMemoryExA(const char* pSrc)
+void PLUMCRYPT_CALLMODE CPlumCrypt::PlumDeCryptFileStoreInMemoryExA(const char* pSrc)
 {
 	HANDLE hFileSrc;
 	HANDLE hFileMsg;
@@ -847,6 +1004,113 @@ void CPlumCrypt::PlumDeCryptFileStoreInMemoryExA(const char* pSrc)
 }
 
 //-------------------------------------------------------------------------------------------------
+// @Function:	 PlumDeCryptFileStoreInMemoryExA(const char* pSrc)
+// @Purpose: PlumDeCryptStoreInMemoryExA解密文件存储到内存Ex(Msg)
+// @Since: v1.00a
+// @Para: const char* pSrc			//解密文件地址
+// @Para: const void * pArray		//目标数组地址
+// @Para: int nSize					//目标数组长度
+// @Return: None
+//-------------------------------------------------------------------------------------------------
+void PLUMCRYPT_CALLMODE CPlumCrypt::PlumDeCryptFileStoreInMemoryExA(const char * pSrc, const void * pArray, int nSize)
+{
+	HANDLE hFileSrc;
+	HANDLE hFileMsg;
+	char* pArr = (char*)pArray;
+
+	//打开源文件
+	hFileSrc = CreateFileA(pSrc, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+
+	if (hFileSrc == INVALID_HANDLE_VALUE)
+	{
+		CloseHandle(hFileSrc);
+		return;
+	}
+
+	//分析文件
+	char* pTemp;
+	char* pMsg;
+	int nCount;
+
+	pTemp = (char*)pSrc;
+	nCount = strlen(pTemp);
+	pMsg = (char*)malloc((nCount + 1) * sizeof(char));
+	strcpy_s(pMsg, (nCount + 1), pTemp);
+	pTemp = strrchr(pMsg, '.');
+	*pTemp = '.';
+	*(pTemp + 1) = 'm';
+	*(pTemp + 2) = 's';
+	*(pTemp + 3) = 'g';
+	*(pTemp + 4) = '\0';
+
+	//打开文件信息
+	hFileMsg = CreateFileA(pMsg, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+
+	if (hFileMsg == INVALID_HANDLE_VALUE)
+	{
+		if (pMsg) free(pMsg);
+		CloseHandle(hFileMsg);
+		return;
+	}
+
+	//读入Msg
+	PlumFileInfo sMsg;
+	DWORD dwMsgRead;
+
+	ReadFile(hFileMsg, &sMsg, sizeof(sMsg), &dwMsgRead, NULL);
+
+	SAFE_DELETE_ARRAY(pArr);
+	nSize = sMsg.dwFileSize;
+	pArr = new char[sMsg.dwFileSize];
+
+	CPlumCipherA* pCode = new CPlumCipherA((unsigned char*)(sMsg.dwLuckyNum));
+	unsigned char* pSrcArr = NULL;
+	unsigned char* pDestArr = NULL;
+	int nSrcSize = CRYPTARRAYSIZE;
+	int nDestSize = CRYPTARRAYSIZE;
+	DWORD dwRealRead = 0;
+	DWORD dwWriteAllCount = 0;
+	DWORD dwWriteLastSize = 0;
+	DWORD dwWriteCount = 0;
+	DWORD dwWriteOffSet = 0;
+
+	dwWriteAllCount = sMsg.dwFileSize / nSrcSize + 1;
+	dwWriteLastSize = sMsg.dwFileSize % nSrcSize;
+
+	pSrcArr = (unsigned char*)malloc(nSrcSize * sizeof(unsigned char));
+	pDestArr = (unsigned char*)malloc(nDestSize * sizeof(unsigned char));
+
+	for (;;)
+	{
+		memset(pSrcArr, 0, nSrcSize);
+		memset(pDestArr, 0, nDestSize);
+
+		ReadFile(hFileSrc, pSrcArr, nSrcSize, &dwRealRead, NULL);
+		if (dwRealRead == 0) break;
+
+		pCode->DeCrypt((void*)pSrcArr, (void*)pDestArr, nSrcSize);
+
+		++dwWriteCount;
+		if (dwWriteCount == dwWriteAllCount)
+		{
+			dwRealRead = dwWriteLastSize;
+		}
+
+		memcpy((pArr + dwWriteOffSet), pDestArr, dwRealRead);
+		dwWriteOffSet += dwRealRead;
+	}
+
+	if (pMsg) free(pMsg);
+	if (pSrcArr) free(pSrcArr);
+	if (pDestArr) free(pDestArr);
+
+	delete pCode;
+
+	CloseHandle(hFileMsg);
+	CloseHandle(hFileSrc);
+}
+
+//-------------------------------------------------------------------------------------------------
 // @Function:	 PlumDeCryptFileInMemoryStoreInFileExA(const char* pSrc)
 // @Purpose: PlumDeCryptStoreInMemoryExA解密内存数组存储到内存Ex(Msg)
 // @Since: v1.00a
@@ -856,7 +1120,7 @@ void CPlumCrypt::PlumDeCryptFileStoreInMemoryExA(const char* pSrc)
 // @Para: const char* pDest					//目标文件地址
 // @Return: None
 //-------------------------------------------------------------------------------------------------
-void CPlumCrypt::PlumDeCryptFileInMemoryStoreInFileExA(const void* pArray, PlumFileInfo sSrcArrayInfo, const char* pDest)
+void PLUMCRYPT_CALLMODE CPlumCrypt::PlumDeCryptFileInMemoryStoreInFileExA(const void* pArray, PlumFileInfo sSrcArrayInfo, const char* pDest)
 {
 	HANDLE hFileDest;
 
@@ -945,7 +1209,7 @@ void CPlumCrypt::PlumDeCryptFileInMemoryStoreInFileExA(const void* pArray, PlumF
 // @Para: PlumFileInfo sSrcArrInfo			//文件信息结构体
 // @Return: None
 //-------------------------------------------------------------------------------------------------
-void CPlumCrypt::PlumDeCryptFileInMemoryStoreInMemoryExA(const void* pArray, PlumFileInfo sSrcArrayInfo)
+void PLUMCRYPT_CALLMODE CPlumCrypt::PlumDeCryptFileInMemoryStoreInMemoryExA(const void* pArray, PlumFileInfo sSrcArrayInfo)
 {
 	CPlumCipherA* pCode = new CPlumCipherA((unsigned char*)(sSrcArrayInfo.dwLuckyNum));
 	unsigned char* pSrcArr = NULL;

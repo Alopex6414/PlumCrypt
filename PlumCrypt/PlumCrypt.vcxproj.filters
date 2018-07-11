@@ -21,6 +21,12 @@
     <ClInclude Include="PlumCipherA.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="PlumCommon.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="PlumCrypt.cpp">
@@ -29,5 +35,10 @@
     <ClCompile Include="PlumCipherA.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="PlumCrypt.rc">
+      <Filter>资源文件</Filter>
+    </ResourceCompile>
   </ItemGroup>
 </Project>

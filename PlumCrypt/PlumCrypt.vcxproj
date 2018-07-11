@@ -53,7 +53,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;PLUMCRYPT_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -81,11 +81,16 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="PlumCipherA.h" />
+    <ClInclude Include="PlumCommon.h" />
     <ClInclude Include="PlumCrypt.h" />
+    <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="PlumCipherA.cpp" />
     <ClCompile Include="PlumCrypt.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="PlumCrypt.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
